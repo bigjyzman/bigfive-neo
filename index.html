@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大五人格测评</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#4F46E5;--primary-light:#EEF2FF;--primary-dark:#3730A3;--bg:#FAFAFA;--card:#fff;--text:#1E293B;--text-light:#64748B;--border:#E2E8F0;--success:#22C55E;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.container{width:100%;max-width:800px;padding:20px;margin:0 auto}
+.screen{display:none;animation:fadeIn .3s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.start-screen{text-align:center;padding:80px 20px}
+.start-screen h1{font-size:2.2em;font-weight:700;margin-bottom:12px;background:linear-gradient(135deg,var(--primary),#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.start-screen p.subtitle{font-size:1.05em;color:var(--text-light);margin-bottom:8px;line-height:1.7}
+.start-screen .info{font-size:.9em;color:var(--text-light);margin:24px 0;background:var(--primary-light);padding:16px 24px;border-radius:var(--radius);line-height:1.6}
+.start-screen .info strong{color:var(--primary)}
+.btn{display:inline-block;padding:14px 48px;border-radius:var(--radius);border:none;font-size:1.05em;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.35)}
+.btn-secondary{background:var(--border);color:var(--text)}
+.btn-secondary:hover{background:#CBD5E1}
+.btn-small{padding:8px 20px;font-size:.88em}
+.questionnaire-header{position:sticky;top:0;background:var(--bg);padding:12px 0;z-index:10}
+.progress-bar{width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),#7C3AED);border-radius:3px;transition:width .4s ease}
+.progress-text{display:flex;justify-content:space-between;font-size:.82em;color:var(--text-light)}
+.items-container{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.item-row{background:var(--card);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.item-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.item-text{font-size:.95em;line-height:1.5;margin-bottom:10px}
+.item-options{display:flex;gap:4px;justify-content:space-between}
+.item-options label{flex:1;text-align:center;padding:6px 2px;border-radius:6px;cursor:pointer;font-size:.82em;color:var(--text-light);border:1px solid var(--border);transition:all .2s;background:var(--bg)}
+.item-options label:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.item-options input{display:none}
+.item-options input:checked+label{background:var(--primary);color:#fff;border-color:var(--primary)}
+.option-labels{display:flex;justify-content:space-between;font-size:.75em;color:var(--text-light);padding:0 2px 4px}
+.nav-buttons{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding:16px 0}
+.nav-buttons .hint{font-size:.85em;color:var(--text-light)}
+.results-header{text-align:center;padding:40px 20px 24px}
+.results-header h2{font-size:1.8em;margin-bottom:8px}
+.results-header p{color:var(--text-light);line-height:1.6}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0}
+.chart-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.chart-card h3{text-align:center;font-size:1.1em;margin-bottom:8px;color:var(--primary)}
+.chart-card .chart-wrap{max-width:340px;margin:0 auto;position:relative}
+.feedback-grid{display:flex;flex-direction:column;gap:16px;margin:24px 0}
+.feedback-card{background:var(--card);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);border-left:4px solid var(--primary)}
+.feedback-card .domain-label{font-weight:600;font-size:1.05em;margin-bottom:4px}
+.feedback-card .domain-score{font-size:.88em;color:var(--text-light);margin-bottom:8px}
+.feedback-card .domain-text{font-size:.92em;line-height:1.7;color:var(--text)}
+.feedback-card.level-high{border-left-color:#22C55E}
+.feedback-card.level-medium{border-left-color:#F59E0B}
+.feedback-card.level-low{border-left-color:#EF4444}
+@media(max-width:640px){
+  .container{padding:12px}
+  .start-screen{padding:48px 16px}
+  .start-screen h1{font-size:1.7em}
+  .item-row{padding:12px 14px}
+  .item-options label{font-size:.75em;padding:5px 1px}
+  .chart-grid{grid-template-columns:1fr}
+  .item-options{gap:3px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div id="screen-start" class="screen active start-screen">
+  <h1>大五人格测评</h1>
+  <p class="subtitle">基于大五人格模型（NEO-PI-3框架），全面评估你在<br>神经质、外向性、开放性、宜人性、尽责性五个维度的特质表现</p>
+  <div class="info">
+    <strong>240题</strong> · 约25-35分钟完成 · 5点量表<br>
+    请根据你的真实感受作答，答案无对错之分
+  </div>
+  <button class="btn btn-primary" onclick="startTest()">开始测评</button>
+</div>
+
+<div id="screen-quiz" class="screen">
+  <div class="questionnaire-header">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text"><span id="pageInfo">第 1 / 10 页</span><span id="answeredInfo">已答 0 题</span></div>
+  </div>
+  <div id="itemsContainer" class="items-container"></div>
+  <div class="nav-buttons">
+    <button class="btn btn-small btn-secondary" id="prevBtn" onclick="prevPage()">上一页</button>
+    <span class="hint" id="navHint">请回答所有题目后继续</span>
+    <button class="btn btn-small btn-primary" id="nextBtn" onclick="nextPage()">下一页</button>
+  </div>
+</div>
+
+<div id="screen-results" class="screen">
+  <div class="results-header">
+    <h2>你的测评结果</h2>
+    <p>以下雷达图展示了你在五个大维度下各个子维度的得分</p>
+  </div>
+  <div class="chart-grid" id="chartGrid"></div>
+  <div class="feedback-grid" id="feedbackGrid"></div>
+  <div style="text-align:center;margin:32px 0 48px">
+    <button class="btn btn-secondary" onclick="restartTest()">重新测评</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const DOMAIN_NAMES={N:'神经质',E:'外向性',O:'开放性',A:'宜人性',C:'尽责性'};
+const DOMAIN_COLORS={N:'#EF4444',E:'#F59E0B',O:'#3B82F6',A:'#22C55E',C:'#8B5CF6'};
+const FACET_NAMES={
+  N1:'焦虑',N2:'愤怒敌意',N3:'抑郁',N4:'自我意识',N5:'冲动性',N6:'脆弱性',
+  E1:'热情',E2:'乐群性',E3:'果断性',E4:'活跃性',E5:'寻求刺激',E6:'积极情绪',
+  O1:'幻想',O2:'审美',O3:'情感',O4:'行动',O5:'观念',O6:'价值',
+  A1:'信任',A2:'坦诚',A3:'利他',A4:'依从',A5:'谦逊',A6:'共感',
+  C1:'胜任感',C2:'条理性',C3:'责任感',C4:'追求成就',C5:'自律',C6:'审慎'
+};
+const DOMAIN_FACETS={N:['N1','N2','N3','N4','N5','N6'],E:['E1','E2','E3','E4','E5','E6'],O:['O1','O2','O3','O4','O5','O6'],A:['A1','A2','A3','A4','A5','A6'],C:['C1','C2','C3','C4','C5','C6']};
+
+const ITEMS_DATA=[
+  // N1 焦虑
+  ['N1','我经常感到紧张不安',false],['N1','我的生活很少有让我担心的事',true],['N1','我容易因为小事而焦虑',false],['N1','面对压力时我通常能保持平静',true],
+  ['N1','我经常担心不好的事情会发生',false],['N1','我很少被恐惧困扰',true],['N1','很多日常琐事都会让我忧心忡忡',false],['N1','我很少感到害怕或紧张',true],
+  // N2 愤怒敌意
+  ['N2','我很容易被激怒',false],['N2','即使被冒犯我也能保持冷静',true],['N2','我常常感到愤愤不平',false],['N2','我不太会因为小事发火',true],
+  ['N2','当别人惹到我时，我会很生气',false],['N2','我的脾气很好，不容易生气',true],['N2','很多事情都让我感到恼火',false],['N2','我很少对别人感到愤怒',true],
+  // N3 抑郁
+  ['N3','我常常感到情绪低落',false],['N3','我很少感到悲伤或沮丧',true],['N3','我经常觉得自己不如别人',false],['N3','我对未来通常持乐观态度',true],
+  ['N3','有时我觉得生活毫无意义',false],['N3','我很少被抑郁情绪困扰',true],['N3','我常常感到孤单',false],['N3','大多数时候我心情都不错',true],
+  // N4 自我意识
+  ['N4','我很容易在社交场合感到不自在',false],['N4','在人多的地方我感到很自在',true],['N4','我常常担心别人怎么看我',false],['N4','我不太在意别人对我的评价',true],
+  ['N4','在陌生人面前我容易感到难为情',false],['N4','与人交往时我很有自信',true],['N4','我常常为自己的表现感到羞愧',false],['N4','我不容易被别人说的话伤害',true],
+  // N5 冲动性
+  ['N5','我常常控制不住自己的冲动',false],['N5','面对诱惑时我能很好地克制自己',true],['N5','我容易沉迷于享乐',false],['N5','做决定前我总是深思熟虑',true],
+  ['N5','我常常做事不计后果',false],['N5','我有很强的自制力',true],['N5','我经常因为一时冲动而后悔',false],['N5','我能很好地控制自己的欲望',true],
+  // N6 脆弱性
+  ['N6','遇到困难时我容易慌乱',false],['N6','危机时刻我通常能冷静应对',true],['N6','压力大时我常常不知所措',false],['N6','我能够很好地应对突发状况',true],
+  ['N6','挫折容易让我一蹶不振',false],['N6','我往往能在困境中找到解决办法',true],['N6','我很容易被压力压垮',false],['N6','我的心理承受能力很强',true],
+  // E1 热情
+  ['E1','我喜欢和别人待在一起',false],['E1','我对结识新朋友不太感兴趣',true],['E1','我很容易和人建立亲密关系',false],['E1','与人亲近让我感到不自在',true],
+  ['E1','我对周围的人很友善',false],['E1','我更喜欢和人保持一定距离',true],['E1','我真心喜欢和他人交往',false],['E1','我不太爱和人打交道',true],
+  // E2 乐群性
+  ['E2','我喜欢热闹的聚会',false],['E2','我更喜欢独处而非社交',true],['E2','人多的地方让我充满活力',false],['E2','独自一人比和人在一起更让我舒服',true],
+  ['E2','我享受大型社交活动',false],['E2','热闹的场合让我感到疲惫',true],['E2','和朋友在一起时我感到快乐',false],['E2','我尽量避免参加聚会',true],
+  // E3 果断性
+  ['E3','我天生就是领导者',false],['E3','我习惯听从别人的安排',true],['E3','在争论中我敢于表达自己的观点',false],['E3','我经常让别人替我做决定',true],
+  ['E3','我善于主导局面',false],['E3','我不喜欢成为焦点',true],['E3','我敢于挑战权威',false],['E3','有分歧时我往往选择退让',true],
+  // E4 活跃性
+  ['E4','我的生活节奏很快',false],['E4','我习惯慢悠悠地做事',true],['E4','我总是精力充沛',false],['E4','我经常感到无精打采',true],
+  ['E4','我喜欢忙碌充实的生活',false],['E4','我倾向于无所事事',true],['E4','我的日程总是安排得很满',false],['E4','我觉得自己行动缓慢',true],
+  // E5 寻求刺激
+  ['E5','我喜欢冒险和刺激',false],['E5','我宁愿待在自己的舒适区',true],['E5','我渴望体验新鲜事物',false],['E5','刺激的活动让我感到不安',true],
+  ['E5','我向往充满变化的生活',false],['E5','我更喜欢稳定可预测的生活',true],['E5','我愿意为了趣味而挑战风险',false],['E5','安全比刺激更重要',true],
+  // E6 积极情绪
+  ['E6','我常常开怀大笑',false],['E6','我很少感到特别快乐',true],['E6','生活中让我开心的事很多',false],['E6','我不太容易兴奋或激动',true],
+  ['E6','我是一个乐观开朗的人',false],['E6','我很少感到欣喜若狂',true],['E6','快乐的情绪很容易感染我',false],['E6','我很少笑得开怀',true],
+  // O1 幻想
+  ['O1','我的想象力非常丰富',false],['O1','我很少做白日梦',true],['O1','我经常沉浸在自己的幻想中',false],['O1','我更喜欢关注实际的事情',true],
+  ['O1','我的脑海里常常浮现各种画面',false],['O1','我不太爱幻想',true],['O1','我很容易被虚构的故事吸引',false],['O1','我对想象不太感兴趣',true],
+  // O2 审美
+  ['O2','我对艺术有很深的感悟',false],['O2','我对美术和音乐没什么兴趣',true],['O2','美丽的风景会深深打动我',false],['O2','我不太在意身边的美',true],
+  ['O2','我热爱诗歌和文学',false],['O2','艺术展览对我没什么吸引力',true],['O2','我容易被艺术作品感动',false],['O2','审美对我来说不太重要',true],
+  // O3 情感
+  ['O3','我的情感非常丰富',false],['O3','我不太关注内心的感受',true],['O3','我能敏锐地觉察自己的情绪变化',false],['O3','我认为情感会干扰理性判断',true],
+  ['O3','我很容易被感动',false],['O3','我很少被情感左右',true],['O3','体验深刻的情感让我感到充实',false],['O3','情绪波动没必要太在意',true],
+  // O4 行动
+  ['O4','我喜欢尝试不同的生活方式',false],['O4','我习惯按固定的方式做事',true],['O4','我渴望去探索未知的世界',false],['O4','新的活动让我感到不安',true],
+  ['O4','我经常尝试新奇的体验',false],['O4','改变对我来说很困难',true],['O4','我愿意走出舒适区去尝试',false],['O4','我倾向于一成不变的生活',true],
+  // O5 观念
+  ['O5','我喜欢思考抽象的概念',false],['O5','我对理论性的问题不太感兴趣',true],['O5','我享受智力上的挑战',false],['O5','我不太关心深奥的知识',true],
+  ['O5','我经常思考哲学性问题',false],['O5','复杂的问题让我头疼',true],['O5','我愿意花时间去理解复杂的思想',false],['O5','我对抽象理论没什么耐心',true],
+  // O6 价值
+  ['O6','我乐于挑战传统观念',false],['O6','我认为传统价值值得坚守',true],['O6','我的想法比较开放前卫',false],['O6','我倾向于遵循既有的规则',true],
+  ['O6','我能够接纳不同的价值观',false],['O6','我认为旧有的方式通常是最好的',true],['O6','我崇尚自由而非服从权威',false],['O6','社会上应该少一些离经叛道',true],
+  // A1 信任
+  ['A1','我相信人性本善',false],['A1','我觉得大多数人都不可信',true],['A1','我愿意相信别人说的话',false],['A1','与人交往时我保持高度警惕',true],
+  ['A1','我倾向于认为别人是善意的',false],['A1','我总觉得别人另有所图',true],['A1','即使是对陌生人我也比较信任',false],['A1','我总是怀疑别人的动机',true],
+  // A2 坦诚
+  ['A2','我总是实话实说',false],['A2','有时为了省事我会撒谎',true],['A2','我是一个表里如一的人',false],['A2','为了不得罪人我会说违心的话',true],
+  ['A2','我不喜欢拐弯抹角',false],['A2','有时我会夸大事实',true],['A2','与人相处时我很真诚',false],['A2','我觉得善意的谎言没什么问题',true],
+  // A3 利他
+  ['A3','看到别人有困难我会主动帮忙',false],['A3','我通常优先考虑自己的利益',true],['A3','帮助别人让我感到快乐',false],['A3','我不太在意别人的死活',true],
+  ['A3','我愿意为他人付出时间和精力',false],['A3','我很少主动帮助别人',true],['A3','我是一个乐于奉献的人',false],['A3','我觉得帮别人是麻烦事',true],
+  // A4 依从
+  ['A4','与人发生冲突时我倾向于让步',false],['A4','必要时我会据理力争',true],['A4','我尽量避免与人争执',false],['A4','受到不公待遇时我一定会反击',true],
+  ['A4','我喜欢和谐的氛围，即使需要妥协',false],['A4','为了达到目的我可以与人对抗',true],['A4','我不喜欢有不同意见',false],['A4','坚持己见比维持和谐更重要',true],
+  // A5 谦逊
+  ['A5','我从不觉得自己比别人优越',false],['A5','我觉得自己比大多数人强',true],['A5','我不太喜欢出风头',false],['A5','我的能力应该被更多人看到',true],
+  ['A5','我倾向于低估自己的成就',false],['A5','我是一个很有自信的人',true],['A5','别人夸我时我会不好意思',false],['A5','我认为自己很优秀',true],
+  // A6 共感
+  ['A6','别人难过时我也会很难过',false],['A6','我不太容易被别人的情绪感染',true],['A6','我能敏锐地察觉到别人的痛苦',false],['A6','别人的困难跟我没什么关系',true],
+  ['A6','我是一个富有同情心的人',false],['A6','看到别人哭我会很不自在',true],['A6','我很容易和别人产生共鸣',false],['A6','理性同情心更重要',true],
+  // C1 胜任感
+  ['C1','我对自己做事的能力很有信心',false],['C1','面对新任务时我常常觉得自己不行',true],['C1','我能很好地处理复杂的问题',false],['C1','我经常怀疑自己的能力',true],
+  ['C1','我相信自己能把事情做好',false],['C1','我很容易被困难打倒',true],['C1','我有信心应对各种挑战',false],['C1','我总觉得自己不如别人有能力',true],
+  // C2 条理性
+  ['C2','我喜欢把东西摆放得整整齐齐',false],['C2','我的房间经常乱七八糟',true],['C2','做事之前我会制定详细的计划',false],['C2','我做事经常凭感觉走',true],
+  ['C2','我是一个有条不紊的人',false],['C2','我受不了太有规律的生活',true],['C2','整洁的环境对我来说很重要',false],['C2','混乱的环境我也能待得下去',true],
+  // C3 责任感
+  ['C3','答应别人的事情我一定会做到',false],['C3','有时我会推卸责任',true],['C3','我是一个靠得住的人',false],['C3','承诺对我来说只是一句话而已',true],
+  ['C3','即使没人监督我也会遵守规则',false],['C3','如果有机会我想偷懒就偷懒',true],['C3','我做事很负责',false],['C3','我对责任这种事情不太上心',true],
+  // C4 追求成就
+  ['C4','我有很高的目标并为之努力',false],['C4','我对现状很满意，不想太拼',true],['C4','我渴望在各个方面都出类拔萃',false],['C4','我不太在乎自己是否成功',true],
+  ['C4','我总是在追求进步',false],['C4','我觉得没必要那么努力',true],['C4','成功对我来说非常重要',false],['C4','我安于现状，不太想改变',true],
+  // C5 自律
+  ['C5','一旦开始做事我就会坚持到底',false],['C5','我经常半途而废',true],['C5','即使不想做我也能督促自己完成',false],['C5','我很容易拖延',true],
+  ['C5','我有很强的自控力去完成任务',false],['C5','我常常因为分心而耽误正事',true],['C5','我能严格遵守自己制定的计划',false],['C5','我很难坚持做一件事',true],
+  // C6 审慎
+  ['C6','做决定前我会仔细权衡利弊',false],['C6','我经常冲动之下做决定',true],['C6','我倾向于三思而后行',false],['C6','我做事常常凭直觉',true],
+  ['C6','我习惯考虑清楚再行动',false],['C6','我经常不做计划就去做事',true],['C6','谨慎是我的一大特点',false],['C6','我倾向于想到什么就做什么',true]
+];
+
+const items=ITEMS_DATA.map((d,i)=>({id:i,facet:d[0],text:d[1],reverse:d[2]}));
+const PAGE_SIZE=24,totalPages=Math.ceil(items.length/PAGE_SIZE);
+let currentPage=0,responses={};
+
+function startTest(){
+  document.getElementById('screen-start').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  renderPage();
+}
+
+function renderPage(){
+  const start=currentPage*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,items.length);
+  const pageItems=items.slice(start,end);
+  const container=document.getElementById('itemsContainer');
+  container.innerHTML=pageItems.map(item=>{
+    const val=responses[item.id]||'';
+    const opts=[1,2,3,4,5].map(n=>`<input type="radio" name="i${item.id}" value="${n}" id="i${item.id}_${n}" ${val==n?'checked':''} onchange="setResponse(${item.id},${n})"><label for="i${item.id}_${n}">${n}</label>`).join('');
+    return `<div class="item-row"><div class="item-text">${item.id+1}. ${item.text}</div><div class="option-labels"><span>非常不同意</span><span>不同意</span><span>中性</span><span>同意</span><span>非常同意</span></div><div class="item-options">${opts}</div></div>`;
+  }).join('');
+  document.getElementById('progressFill').style.width=((currentPage+1)/totalPages*100)+'%';
+  document.getElementById('pageInfo').textContent=`第 ${currentPage+1} / ${totalPages} 页`;
+  updateAnsweredCount();
+  document.getElementById('prevBtn').style.visibility=currentPage===0?'hidden':'visible';
+  document.getElementById('nextBtn').textContent=currentPage===totalPages-1?'完成':'下一页';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setResponse(id,val){ responses[id]=val; updateAnsweredCount(); }
+
+function updateAnsweredCount(){
+  const answered=Object.keys(responses).length;
+  document.getElementById('answeredInfo').textContent=`已答 ${answered} / ${items.length} 题`;
+  const start=currentPage*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,items.length);
+  const pageAnswered=items.slice(start,end).filter(i=>responses[i.id]).length;
+  const hint=document.getElementById('navHint');
+  if(pageAnswered<end-start) hint.textContent=`本页还有 ${end-start-pageAnswered} 题未答`;
+  else hint.textContent='✓ 本页已全部完成';
+}
+
+function nextPage(){
+  const start=currentPage*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,items.length);
+  const pageAnswered=items.slice(start,end).filter(i=>responses[i.id]).length;
+  if(pageAnswered<end-start){alert(`本页还有 ${end-start-pageAnswered} 题未答，请完成后再继续。`);return;}
+  if(currentPage===totalPages-1){showResults();return;}
+  currentPage++;renderPage();
+}
+
+function prevPage(){if(currentPage>0){currentPage--;renderPage()}}
+
+function computeScores(){
+  const facetItems={};
+  items.forEach(item=>{if(!facetItems[item.facet])facetItems[item.facet]=[];facetItems[item.facet].push(item);});
+  const facetScores={};
+  for(const[f,flist]of Object.entries(facetItems)){let sum=0,count=0;flist.forEach(item=>{const raw=responses[item.id];if(raw){sum+=item.reverse?6-raw:raw;count++;}});facetScores[f]=count>0?sum/count:null;}
+  const domainScores={};
+  for(const[d,facets]of Object.entries(DOMAIN_FACETS)){const scores=facets.map(f=>facetScores[f]).filter(s=>s!==null);domainScores[d]=scores.length>0?scores.reduce((a,b)=>a+b,0)/scores.length:null;}
+  return{facetScores,domainScores};
+}
+
+function getLevel(score){if(score===null)return'—';if(score<2.5)return'低';if(score<=3.5)return'中';return'高';}
+
+const FEEDBACK={
+  N:{
+    high:'你在神经质维度上得分较高，意味着你更容易体验到负面情绪，如焦虑、愤怒和抑郁。你对压力和挫折的反应较为强烈，这可能使你在面对挑战时感到更多的心理负担。高神经质的人通常对威胁和不确定性更加敏感，但也意味着你对环境的细微变化有更强的觉察力。从生涯发展角度看，较高的尽责性可以帮助缓冲神经质带来的负面影响——你的责任心越强，情绪波动对工作和生活的影响就越可控。',
+    mid:'你在神经质维度上处于中等水平。你能够体验到正常的情绪起伏，但通常不会被情绪完全左右。在压力情境下你有时会感到焦虑或沮丧，但大多数时候能够恢复平衡。这种适度的情绪敏感性让你既不会过于麻木，也不会过度反应。',
+    low:'你在神经质维度上得分较低，说明你情绪稳定、沉着冷静。面对压力时你能够保持平和的心态，不容易被负面情绪困扰。这种特质使你在危机情境中更能保持理性判断，也让你在团队中扮演"稳定器"的角色。不过，过低水平的神经质有时也可能意味着对风险信号不够敏感，这在需要高度警惕的工作情境中值得留意。'
+  },
+  E:{
+    high:'你在外向性维度上得分较高，说明你精力充沛、乐于社交、喜欢活跃的氛围。你从人际互动中获得能量，享受成为焦点和被关注的感觉。你在团队合作和社交场合中如鱼得水，适合需要频繁沟通和协作的工作环境。你的热情和活力能够感染周围的人，这在领导力和销售类角色中是突出的优势。',
+    mid:'你在外向性维度上处于中等水平，在社交和独处之间保持了良好的平衡。你能够享受与人交往的乐趣，但同样需要独处的时间来恢复能量。你不一定是最活跃的社交者，但在必要的社交场合中你能够自如应对。这种平衡让你在不同类型的工作环境中都能找到自己的节奏。',
+    low:'你在外向性维度上得分较低，意味着你倾向于安静、内敛和内省。相比于大规模社交活动，你更喜欢小范围的深入交流或独处。你从安静的环境中获得能量，这让你特别适合需要深度专注和独立完成的工作。你的内省特质也使你更善于观察和思考，这在需要分析能力和创造力的领域中是非常宝贵的优势。'
+  },
+  O:{
+    high:'你在开放性维度上得分较高，说明你好奇心强、想象力丰富、乐于接受新事物。你对艺术、美学和抽象思维有浓厚的兴趣，渴望体验和探索未知。这种特质让你天生适合需要创造力和创新思维的工作。你乐于挑战传统、尝试新方法，在快速变化的时代中具有天然的优势。开放性高的人通常学习能力较强，能够适应多变的职业环境。',
+    mid:'你在开放性维度上处于中等水平。你对新事物保持开放态度，但也不会盲目追逐变化。你既能够欣赏艺术和抽象概念，也重视实际和经验。在创新和传统之间你能够灵活切换，这种适应性让你在不同的工作场景中都能从容应对。你愿意尝试新方法，但也会评估风险。',
+    low:'你在开放性维度上得分较低，说明你更倾向于务实、传统和脚踏实地。你喜欢熟悉的环境和经过验证的方法，而不是追求新奇和变化。这种特质让你在面对需要坚守规则和标准的职业时表现出色，如行政管理、会计、法律等领域。你的务实精神让团队保持稳定和高效，避免盲目冒进的风险。'
+  },
+  A:{
+    high:'你在宜人性维度上得分较高，说明你善解人意、合作性强、乐于助人。你重视人际关系的和谐，愿意为了集体利益做出让步。你信任他人，富有同情心，这让你成为团队中不可或缺的凝聚力量。在需要团队协作、客户服务或关怀他人的职业中，你的宜人性是巨大的优势。高宜人性的人通常人际网络广、社会支持系统强。',
+    mid:'你在宜人性维度上处于中等水平。你能够与他人良好合作，但也不会一味退让。你在关心他人需求和维护自身利益之间找到了平衡点。在需要协商和谈判的情境中，你能够既保持关系又争取结果。这种适度的宜人性让你既有人情味又有原则性。',
+    low:'你在宜人性维度上得分较低，意味着你更加独立、理性和竞争性强。你倾向于坚持自己的判断，不轻易被他人的意见左右。在做决策时你更多地基于事实而非情感，这让你在需要果断决策和独立判断的角色中表现出色，如管理、法律、科研等领域的领导岗位。你的直言不讳虽然有时显得不够圆融，但也是团队中不可或缺的诚实声音。'
+  },
+  C:{
+    high:'你在尽责性维度上得分较高，这是与未来生涯发展关联最密切的特质！高度的尽责性意味着你自律、有条理、有目标、可靠且坚持不懈。大量研究表明，尽责性是预测学业成就、工作绩效和职业成功的最强人格因素。你善于制定计划并严格执行，即使面对困难也能持之以恒。这种特质让你在任何组织中都是值得信赖的团队成员。如果你在尽责性上得分较高，那么无论选择哪个职业方向，你都具备了成功的基础素质。',
+    mid:'你在尽责性维度上处于中等水平。你有一定的自律性和目标感，但也会在适当的时候放松自己。你能够按时完成任务，但有时也会有拖延的倾向。在组织和计划方面，你能够基本做到有条不紊，但也会接受一定程度的灵活性。这种适度的尽责性让你既不会过于刻板，也不会过于随性，在大多数职业中都能表现得体。',
+    low:'你在尽责性维度上得分较低，说明你更加随性、灵活和即兴。你不喜欢被严格的计划和时间表束缚，倾向于根据当下的感觉来行动。虽然这种特质让你更加自由和适应变化，但大量研究表明，尽责性对生涯发展的影响非常显著。如果你希望在未来取得更大的职业成就，可以在目标设定、时间管理和自律方面进行有意识的训练。即使分数较低，通过环境的设计和习惯的培养，你仍然可以有效地弥补这方面的不足。'
+  }
+};
+
+function showResults(){
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-results').classList.add('active');
+  const{facetScores,domainScores}=computeScores();
+  const grid=document.getElementById('chartGrid');grid.innerHTML='';
+  ['N','E','O','A','C'].forEach(d=>{
+    const card=document.createElement('div');card.className='chart-card';
+    const facets=DOMAIN_FACETS[d];
+    const data=facets.map(f=>Math.round((facetScores[f]||0)*100)/100);
+    const labels=facets.map(f=>FACET_NAMES[f]);
+    const color=DOMAIN_COLORS[d];
+    card.innerHTML=`<h3>${DOMAIN_NAMES[d]}</h3><div class="chart-wrap"><canvas id="chart-${d}"></canvas></div>`;
+    grid.appendChild(card);
+    setTimeout(()=>{
+      const ctx=document.getElementById(`chart-${d}`);if(!ctx)return;
+      new Chart(ctx,{type:'radar',data:{labels,datasets:[{data,backgroundColor:color+'33',borderColor:color,borderWidth:2,pointBackgroundColor:color,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.r.toFixed(2)}}},scales:{r:{min:1,max:5,ticks:{stepSize:1,font:{size:10},backdropPadding:0},pointLabels:{font:{size:12,weight:'500'},color:'#475569'},grid:{color:'#E2E8F0'},angleLines:{color:'#E2E8F0'}}}}});
+    },50);
+  });
+  const feed=document.getElementById('feedbackGrid');feed.innerHTML='';
+  ['N','E','O','A','C'].forEach(d=>{
+    const score=domainScores[d];const level=getLevel(score);
+    const text=FEEDBACK[d][level==='低'?'low':level==='高'?'high':'mid'];
+    const card=document.createElement('div');card.className=`feedback-card level-${level==='高'?'high':level==='低'?'low':'medium'}`;
+    card.innerHTML=`<div class="domain-label">${DOMAIN_NAMES[d]}</div><div class="domain-score">得分：${score!==null?score.toFixed(2):'—'} · 水平：${level}</div><div class="domain-text">${text}</div>`;
+    feed.appendChild(card);
+  });
+}
+
+function restartTest(){responses={};currentPage=0;document.getElementById('screen-results').classList.remove('active');document.getElementById('screen-start').classList.add('active');}
+</script>
+</body>
+</html>
